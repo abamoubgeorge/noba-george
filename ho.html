@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>الاختبار التفاعلي</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      direction: rtl;
+      background-color: #121212;
+      color: #ffffff;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .center-title {
+      text-align: center;
+      font-size: 48px;
+      font-weight: bold;
+      margin-top: 80px;
+      color: #ffffff;
+      text-shadow: 0 0 10px #00bcd4;
+      transition: all 0.4s ease-in-out;
+      cursor: pointer;
+      animation: popIn 1.5s ease forwards;
+    }
+
+    .center-title:hover {
+      color: #00e5ff;
+      text-shadow: 0 0 20px #00e5ff, 0 0 30px #00e5ff;
+      transform: scale(1.05);
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: none;
+      background-color: #1e1e1e;
+      color: #fff;
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    button {
+      padding: 12px 24px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+      font-size: 16px;
+      margin-top: 10px;
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    button:hover {
+      background-color: #00bcd4;
+      transform: scale(1.05);
+      box-shadow: 0 0 10px #00bcd4;
+    }
+
+    .question {
+      background: #1f1f1f;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .correct { color: #4caf50; }
+    .wrong { color: #f44336; }
+
+    .hidden {
+      display: none;
+    }
+
+    h2, h3, p {
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    /* الحركات */
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="center-title" id="mainTitle">الاختبار</div>
+
+    <!-- شاشة البداية -->
+    <div id="startScreen">
+      <p style="text-align:center;">هذا الاختبار للتقييم الشخصي</p>
+      <input type="text" id="username" placeholder="اكتب اسمك هنا" required />
+      <button onclick="startQuiz()">ابدأ الاختبار</button>
+    </div>
+
+    <!-- نموذج الاختبار -->
+    <form id="quizForm" class="hidden"></form>
+
+    <!-- زر التصحيح -->
+    <div id="submitDiv" class="hidden">
+      <button onclick="checkAnswers()">تصحيح</button>
+    </div>
+
+    <!-- النتيجة -->
+    <div id="result" class="hidden"></div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        type: "truefalse",
+        question: "السماء زرقاء.",
+        answer: "true"
+      },
+      {
+        type: "mcq",
+        question: "ما عاصمة مصر؟",
+        options: ["القاهرة", "الرياض", "دمشق", "الخرطوم"],
+        answer: "القاهرة"
+      },
+      {
+        type: "truefalse",
+        question: "الشمس تدور حول الأرض.",
+        answer: "false"
+      },
+      {
+        type: "mcq",
+        question: "ما هي لغة البرمجة التي تُستخدم في تطوير صفحات الويب؟",
+        options: ["Python", "JavaScript", "C++", "Java"],
+        answer: "JavaScript"
+      }
+    ];
+
+    const quizForm = document.getElementById("quizForm");
+    const resultDiv = document.getElementById("result");
+
+    function startQuiz() {
+      const name = document.getElementById("username").value.trim();
+      if (name === "") {
+        alert("من فضلك اكتب اسمك أولاً");
+        return;
+      }
+
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("mainTitle").classList.add("hidden");
+      quizForm.classList.remove("hidden");
+      document.getElementById("submitDiv").classList.remove("hidden");
+
+      // توليد الأسئلة
+      questions.forEach((q, index) => {
+        const div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `<p><strong>${index + 1}. ${q.question}</strong></p>`;
+
+        if (q.type === "truefalse") {
+          div.innerHTML += `
+            <label><input type="radio" name="q${index}" value="true"> صح</label><br>
+            <label><input type="radio" name="q${index}" value="false"> خطأ</label>
+          `;
+        } else if (q.type === "mcq") {
+          q.options.forEach(opt => {
+            div.innerHTML += `<label><input type="radio" name="q${index}" value="${opt}"> ${opt}</label><br>`;
+          });
+        }
+
+        quizForm.appendChild(div);
+      });
+    }
+
+    function checkAnswers() {
+      let score = 0;
+      const total = questions.length;
+      resultDiv.innerHTML = "";
+      resultDiv.classList.remove("hidden");
+
+      questions.forEach((q, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        const userAnswer = selected ? selected.value : "";
+        const isCorrect = userAnswer === q.answer;
+
+        const p = document.createElement("p");
+        p.innerHTML = `سؤال ${index + 1}: ${isCorrect ? "✅ إجابة صحيحة" : "❌ إجابة خاطئة (الصحيح: ${q.answer})"}`;
+        p.className = isCorrect ? "correct" : "wrong";
+        resultDiv.appendChild(p);
+
+        if (isCorrect) score++;
+      });
+
+      const finalScore = document.createElement("h3");
+      finalScore.innerText = `النتيجة: ${score} من ${total}`;
+      resultDiv.appendChild(finalScore);
+    }
+  </script>
+
+</body>
+</html>
